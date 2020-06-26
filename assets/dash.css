@@ -1,0 +1,5 @@
+#index-grid {
+  display:grid;
+  grid-template-columns: repeat(13, 1fr);
+  grid-gap: 0px 1spx;
+}
