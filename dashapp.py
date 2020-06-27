@@ -6,13 +6,13 @@ from dash.dependencies import Input, Output
 import numpy as np
 import pandas as pd
 import ujson
-# Used to read excel file
 from openpyxl import load_workbook
 import plotly.graph_objects as go
 
 
 excel_file = '500 K LEIS 1st round 27.5.xlsx'
-def read_data(filename):    
+
+def read_data(filename):
     """ 
     This function reads the above specified file and returns two numpy array
     which contain the x-data and y-data 
@@ -75,6 +75,8 @@ import pickle
 #     # Pickle the 'data' dictionary using the highest protocol available.
 #     pickle.dump(y_data, f, pickle.HIGHEST_PROTOCOL)
 
+
+#Using pickle for data-source to speed up the loading process
 with open('x_data', 'rb') as f:
     # The protocol version used is detected automatically, so we do not
     # have to specify it.
@@ -94,7 +96,6 @@ grid_points = []
 for i in range(169):
     grid_points.append({'label':str(i//13)+', '+str(i%13),'value':i})
 
-
 app.layout = html.Div(children=[
     html.H2(children="Pick an index from the left graph \n to show the data on the right graph"),
     dcc.Checklist(id='show-fit',options=[{'label':'Show Fitted lines','value':0}]),
@@ -113,13 +114,15 @@ dcc.Graph(id='data-graph')
     [Input('index-grid','value'),
     Input('show-fit','value')]
 )
-def update_graph(in1,show_fit):
+def update_graph(input_values,show_fit):
+    """ App callback function to read checked grid points and display the corresponding graph
 
-    if not in1:
+    """
+    if not input_values:
         return {'data':[]}
     traces = []
     if show_fit:        
-        for val in in1:
+        for val in input_values:
             yfit = peak_data[str(val)]['fit']
             legendgroup_name = 'group'+str(val)
 
@@ -144,7 +147,7 @@ def update_graph(in1,show_fit):
             line = dict(color=str(val)),
                 ))
     else:        
-        for val in in1:
+        for val in input_values:
             traces.append(dict(
             x=np.array(x_data)[:,0].tolist(),
             y=np.array(y_data)[:,val].tolist(),
