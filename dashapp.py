@@ -87,27 +87,44 @@ with open('y_data', 'rb') as f:
     # have to specify it.
     y_data = pickle.load(f)
 
-with open('data.json') as json_file:
+with open('fitted_data/fitted_500 K LEIS 1st round 27.5.xlsx.json') as json_file:
     peak_data = ujson.load(json_file)
 
 app = dash.Dash(__name__)
 
-grid_points = []
-for i in range(169):
-    grid_points.append({'label':str(i//13)+', '+str(i%13),'value':i})
+def define_grid_points():
+    grid_points = []
+    for i in range(169):
+        grid_points.append({'label':str(i//13)+', '+str(i%13),'value':i})
 
-app.layout = html.Div(children=[
-    html.H2(children="Pick an index from the left graph \n to show the data on the right graph"),
-    dcc.Checklist(id='show-fit',options=[{'label':'Show Fitted lines','value':0}]),
-dcc.Checklist(id='index-grid',
-    options=grid_points,
-    value=[1]
-),
-dcc.Graph(id='ternary-plot'),
-html.Button('Clear All',id='clear-button',title='Clears all the data graphs from the window', n_clicks=1),
-dcc.Graph(id='data-graph')
-])
 
+app.layout = html.Div([
+    dcc.Tabs([
+        dcc.Tab(label='Reading Files', children=[
+            html.Div([
+            html.H1('Tab content 1')
+        ])]),
+
+         dcc.Tab(label='Generate Fit', children=[
+            html.Div([
+            html.H1('Tab content 2')
+        ])]),
+        dcc.Tab(label='Visualize Data', children=[
+            html.Div(children=[
+                html.H2(children="Pick an index from the left graph \n to show the data on the right graph"),
+                dcc.Checklist(id='show-fit', options=[{'label':'Show Fitted lines','value':0}]),
+                dcc.Checklist(id='index-grid', options=grid_points, value=[1]), 
+                dcc.Graph(id='ternary-plot'),
+                html.Button('Clear All',id='clear-button',title='Clears all the data graphs from the window', n_clicks=1),
+                dcc.Graph(id='data-graph')
+                ])]),
+        dcc.Tab(label='Generate Fit', children=[
+            html.Div([
+                html.H1('Tab content 2')
+                ])
+                ])
+                ])
+                ])
 
 @app.callback(
     Output('data-graph','figure'),
