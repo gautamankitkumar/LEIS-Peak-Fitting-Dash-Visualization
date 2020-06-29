@@ -39,7 +39,7 @@ on your terminal. And open a browser with URL http://127.0.0.1:8050/
 ## Usage
 
 The app is intended to be used in the following manner
-- Step-1: Choose the data file. If not already present, copy the file into the `/data` folder and restart the app.
+- Step-1: Choose the data file. If not already present, copy the file into the `/data` folder and restart the app
 - Step-2: Choose the corresponding fitting. Fit the data if the fitting is already not present. Restart the app once fitting process ends
 - Step-3: Visualize the data via the indexed grid. Multiple selections can be made and `Clear all` button used to remove all graphs
 - Step-4: [In progress] Export the rendered graph in step-3 to standalone HTML file or excel format
