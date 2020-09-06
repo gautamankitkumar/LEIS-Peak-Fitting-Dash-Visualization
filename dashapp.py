@@ -97,34 +97,30 @@ def fit_and_write_json(excel_file):
     height = []
     for i in range(169):
         peaks,_ = find_peaks(y_data[:,i],height=5000,distance=50)
-        data[i] = np.array(peaks,dtype=float)
+        data[i] = np.array(peaks,dtype=int).tolist()
     
     # Currently the dictionary should look like {'1': 1, '2': 2, '3':2 ...} and so on
     peak_data = data
     
-    # Iterating over all 13 X and 13 Ys
-    
+    # Iterating over all 13 X and 13 Ys    
     for i in range(169):
         
         # If scipy.signal.find_peaks finds only one peak
         if len(peak_data[i]) == 1:
             gmodel = Model(gaussian)
-            peak = x_data[int(peak_data[i][0])][0]
+            peak = x_data[peak_data[i][0],0]
             
             # Initialize appropriate singal from the peak data
             # center "c1" comes from the peak data itself
             c1 = peak
-            
+            a1 = y_data[peak_data[i][0],i]
             if peak <= 850:
-                a1 = 10000
                 w1 = 20
             elif peak <= 900:
-                a1 = 40000
                 w1 = 15
             else:
-                a1 = 80000
                 w1 = 10
-                
+
             # Fit using these initial estimates
             result = gmodel.fit(y_data[:,i], x=x_data[:,0],amp=a1,cen=c1,width=w1)
             y1 = gaussian(x_data,result.best_values['amp'],result.best_values['cen'],result.best_values['width'])
@@ -133,30 +129,27 @@ def fit_and_write_json(excel_file):
             
         elif len(peak_data[i]) == 2:
             # For two peaks
-            peak1 = x_data[int(peak_data[i][0])][0]
-            peak2 = x_data[int(peak_data[i][1])][0]
+            peak1 = x_data[peak_data[i][0],0]
+            peak2 = x_data[peak_data[i][1],0]
             
             c1 = peak1
+            a1 = y_data[peak_data[i][0],i]
             c2 = peak2
+            a2 = y_data[peak_data[i][1],i]
             if peak1<= 850:
-                a1 = 10000
                 w1 = 20
             elif peak1 <= 900:
-                a1 = 40000
                 w1 = 15
             else:
-                a1 = 80000
                 w1 = 10
                 
             if peak2<= 850:
-                a2 = 10000
                 w2 = 20
             elif peak2 <= 900:
-                a2 = 40000
                 w2 = 15
             else:
-                a2 = 80000
                 w2 = 10
+
             # Fit two peaks
             gmodel = Model(gauss2)
             result = gmodel.fit(y_data[:,i], x=x_data[:,0], a1 = a1,c1=c1,w1=w1,a2=a2,c2=c2,w2=w2)
@@ -167,42 +160,36 @@ def fit_and_write_json(excel_file):
                         'mu1':result.best_values['c1'],'mu2':result.best_values['c2']}
             
         else:
-            peak1 = x_data[int(peak_data[i][0])][0]
-            peak2 = x_data[int(peak_data[i][1])][0]
-            peak3 = x_data[int(peak_data[i][2])][0]
+            peak1 = x_data[peak_data[i][0],0]
+            peak2 = x_data[peak_data[i][1],0]
+            peak3 = x_data[peak_data[i][2],0]
             
             c1 = peak1
+            a1 = y_data[peak_data[i][0],i]
             c2 = peak2
+            a2 = y_data[peak_data[i][1],i]
             c3 = peak3
+            a3 = y_data[peak_data[i][2],i]
             
             if peak1<= 850:
-                a1 = 25000
                 w1 = 20
             elif peak1 <= 900:
-                a1 = 25000
                 w1 = 15
             else:
-                a1 = 25000
                 w1 = 10
                 
             if peak2<= 850:
-                a2 = 25000
                 w2 = 20
             elif peak2 <= 900:
-                a2 = 25000
                 w2 = 15
             else:
-                a2 = 25000
                 w2 = 10
                 
             if peak3<= 850:
-                a3 = 25000
                 w3 = 20
             elif peak3 <= 900:
-                a3 = 25000
                 w3 = 15
             else:
-                a3 = 25000
                 w3 = 10                
             
             # Fit three peaks
@@ -293,7 +280,7 @@ app.layout = html.Div([
             html.Button(children='Fit now',id='fit-button',
             title='Fit the chosen excel file', n_clicks=0),
             ]),
-            dcc.RadioItems(id='select_fit_file',options=fit_files_dict, value=str(dir_fit_files[0])),
+            dcc.RadioItems(id='select_fit_file',options=fit_files_dict, value=0),
             dcc.Loading(
                     id="loading_div",
                     children=[html.Div([html.Div(id="loading-output")])],
@@ -315,6 +302,8 @@ app.layout = html.Div([
             html.Div([
                 html.H1('Tab content 4')])])])])
 
+
+# Fitting a new data file
 n_fit = 0
 @app.callback(
     Output("loading-output", "children"), 
@@ -327,13 +316,15 @@ def fit_new_data(fit_clicks,data_file):
         fit_and_write_json(data_file)
         return 'Fitting Done'
 
+# Showing excel name on top of visualization
 @app.callback(
     Output('excel_file_name','children'),
     [Input('select_excel','value')]
 )
 def select_excel_to_plot(excel_name):
-    return "Currently showing graph for {0}".format(excel_name)
+    return "Currently showing graph for {0}".format(excel_name[5:])
 
+# Determine if fitting is to be done
 @app.callback(
     [Output('fit_state','children'),
     Output('select_fit_file','value'),
@@ -348,6 +339,7 @@ def fit_file(excel_file):
     else:
         return 'Fit not available. Press fit now to fit this new file. Then refresh page to see the fitted file', 0, False
 
+# Main visualization component. Update graph based on Ticked checklist
 @app.callback(
     Output('data-graph','figure'),
     [Input('index-grid','value'),
@@ -414,6 +406,7 @@ def update_graph(input_values,show_fit,excel_name):
     else:
         return {'data':[]}
 
+# Determine if the "Clear-All" button has been pressed
 current_n = 0
 @app.callback(
     Output('index-grid','value'),
@@ -425,6 +418,7 @@ def clear_graph(n_click):
         current_n = n_click
         return []
 
+# Main visualization component. Update ternary plots based on checklist index
 @app.callback(
     Output('ternary-plot','figure'),
     [Input('index-grid','value')]
@@ -451,6 +445,8 @@ def get_ternary_plot(input_values):
     }})
 
     return fig
+
+
 
 if __name__ == '__main__':
     app.run_server(debug=True)
